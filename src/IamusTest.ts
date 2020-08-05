@@ -18,6 +18,13 @@ const API_ACCOUNT_LOGIN = '/oauth/token';
 const API_ACCOUNT_CREATE = '/api/v1/users';
 const API_GET_TOKEN = '/api/v1/token/new';
 const API_GET_ACCOUNTS = '/api/v1/accounts';
+const API_GET_DOMAINS = '/api/v1/domains';
+const API_GET_TOKENS = '/api/v1/tokens';
+
+// a casting interface used to index fields of an object (the *Info's, for instance)
+interface Indexable {
+    [ key: string ]: any;
+};
 
 type AuthToken = string;
 interface AuthTokenInfo {
@@ -26,12 +33,74 @@ interface AuthTokenInfo {
     scope: string,
     refresh_token: string
 };
+interface AccountInfo {
+    accountId: string,
+    username: string,
+    email: string,
+    administrator: boolean,
+    publicKey: string,
+    images: {
+        tiny: string,
+        hero: string,
+        thumbnail: string
+    },
+    location: {
+        connected: boolean,
+        path: string,
+        placeId: string,
+        domainId: string,
+        networkAddress: string,
+        networkPort: number,
+        nodeId: string,
+        discoverability: string // one of 'none', 'friends', 'connections', 'all'
+    },
+    friends: string,
+    connections: string,
+    whenAccountCreated: string,
+    timeOfLastHeartbeat: string,
+};
+interface DomainInfo {
+    domainid: string,
+    place_name: string,
+    public_key: string,
+    sponser_accountid: string,
+    ice_server: string,
+    version: string,
+    protocol_version: string,
+    network_addr: string,
+    networking_mode: string,
+    restricted: string,
+    num_users: number,
+    anon_users: number,
+    total_users: number,
+    capacity: number,
+    description: string,
+    maturity: string,
+    restriction: string,
+    hosts: string[],
+    tags: string[],
+    time_of_last_heartbeat: string,
+    last_sender_key: string,
+    addr_of_first_contact: string,
+    when_domain_entry_created: string
+};
+interface TokenInfo {
+    tokenId: string,
+    token: string,
+    accountId: string,
+    refresh_token: string,
+    scope: string,
+    creation_time: string,
+    expiration_time: string
+};
 
 // Information on current user
 let gLoginUser = '';
 let gLoginTokenInfo: AuthTokenInfo = {} as AuthTokenInfo;
 let gDomainToken: AuthToken = {} as AuthToken;
-let gAccountInfo: any[];
+let gAccountsInfo: AccountInfo[];
+let gDomainsInfo: DomainInfo[];
+let gTokensInfo: TokenInfo[];
 
 document.addEventListener('DOMContentLoaded', ev => {
     // Make all 'class=clickable' page items create events
@@ -161,15 +230,36 @@ function OpGetDomainToken(evnt: Event): void {
     });
 };
 function OpAccountList(evnt: Event): void {
-    DebugLog('OpAccountList:');
-    RefreshAccountList()
+    FetchAccountList()
     .then( acctList => {
         DebugLog('OpAccountList: accounts fetched: ' + acctList.length);
-        gAccountInfo = acctList;
+        gAccountsInfo = acctList;
         DisplayAccounts();
     })
     .catch( err => {
         ErrorLog('Could not fetch accounts: ' + err);
+    });
+};
+function OpDomainList(evnt: Event): void {
+    FetchDomainList()
+    .then( domList => {
+        DebugLog('OpDomainsList: domains fetched: ' + domList.length);
+        gDomainsInfo = domList;
+        DisplayDomains();
+    })
+    .catch( err => {
+        ErrorLog('Could not fetch domains: ' + err);
+    });
+};
+function OpTokenList(evnt: Event): void {
+    FetchTokenList()
+    .then( tokList => {
+        DebugLog('OpTokenList: tokens fetched: ' + tokList.length);
+        gTokensInfo = tokList;
+        DisplayTokens();
+    })
+    .catch( err => {
+        ErrorLog('Could not fetch tokens: ' + err);
     });
 };
 // ============================================================================
@@ -302,19 +392,33 @@ function CreateUserAccount(pUsername: string, pPassword: string, pEmail: string)
         request.send(requestData);
     });
 };
-function RefreshAccountList(): Promise<any[]> {
+function FetchAccountList(): Promise<any[]> {
+    return GetDataFromServer(API_GET_ACCOUNTS, 'accounts');
+};
+function FetchDomainList(): Promise<any[]> {
+    return GetDataFromServer(API_GET_DOMAINS, 'domains');
+};
+// Return a Promise for a request to the server and return the 'data' that is fetched.
+function FetchTokenList(): Promise<any[]> {
+    return GetDataFromServer(API_GET_TOKENS, 'tokens');
+};
+// Return a Promise for a request to the server and return the 'data' that is fetched.
+// If there are any errors, the Promise is rejected with a text error.
+// If 'pDataField' is passed, what is returned is 'data[pDataField]' otherwise
+//    the whole 'data' structure is returned.
+// Note: this also sends the gLoginTokenInfo info in the Authorization header.
+function GetDataFromServer(pBaseUrl: string, pDataField?: string): Promise<any[]> {
     return new Promise( (resolve, reject) => {
         const request = new XMLHttpRequest();
         request.onreadystatechange = function() {
             if (this.readyState === XMLHttpRequest.DONE) {
                 if (this.status === 200) {
                     const response = JSON.parse(request.responseText);
-                    if (response.status !== 'success') {
+                    if (response.status && response.status !== 'success') {
                         reject(request.responseText);
                     }
                     else {
-                        DebugLog('Successful fetch of accounts');
-                        resolve(response.data.accounts);
+                        resolve( pDataField ? response.data[pDataField] : response.data);
                     };
                 }
                 else {
@@ -322,7 +426,7 @@ function RefreshAccountList(): Promise<any[]> {
                 };
             };
         };
-        request.open("GET", ServerURL() + API_GET_ACCOUNTS);
+        request.open("GET", ServerURL() + pBaseUrl);
         request.setRequestHeader('Authorization', `${gLoginTokenInfo.token_type} ${gLoginTokenInfo.token}`);
         request.send();
     });
@@ -342,28 +446,70 @@ function DisplayDomainToken(domainToken: AuthToken): void {
 function DisplayAccounts() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
     const columns = [
-        ['id', 'accountId', 'v-acct-id'],
+        ['id', 'accountId', 'v-id v-acct-id'],
         ['name', 'username', 'v-acct-name'],
         ['email', 'email', 'v-acct-email'],
         ['admin', 'administrator', 'v-acct-admin'],
         ['whenCreated', 'when_account_created', 'v-acct-created']
     ];
-    const rows: HTMLElement[] = [];
-    // Add row of headers
-    rows.push(makeRow(columns.map(col => {
-        return makeHeader(col[0]);
-    }) ) );
-    // Add rows for each of the returned accounts
-    if (gAccountInfo) {
-        gAccountInfo.forEach( acct => {
-            rows.push( makeRow(columns.map( col => {
-                return makeData(acct[col[1]], col[2]);
-            })));
-        });
-    };
+    const rows = BuildTableRows(columns, gAccountsInfo);
     const tablePlace = document.getElementById('v-account-list');
     tablePlace.innerHTML = '';
     tablePlace.appendChild(makeTable(rows, 'v-table v-acct-table v-info-table'));
+};
+function DisplayDomains() {
+    // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
+    const columns = [
+        ['id', 'domainId', 'v-id v-dom-id'],
+        ['place', 'place_name', 'v-dom-place'],
+        ['sponser', 'sponser_account', 'v-id v-dom-sponser'],
+        ['version', 'version', 'v-dom-version'],
+        ['netaddr', 'network_addr', 'v-dom-netaddr'],
+        ['users', 'num_users', 'v-dom-users'],
+        ['anon', 'anon_users', 'v-dom-anon'],
+        ['cap', 'capacity', 'v-dom-capacity'],
+        ['desc', 'description', 'v-dom-desc'],
+        ['tags', 'tags', 'v-dom-tags'],
+        ['last sender', 'last_sender_key', 'v-dom-sender'],
+        ['last heartbeat', 'time_of_last_heartbeat', 'v-dom-lasthb'],
+        ['created', 'when_domain_entry_created', 'v-dom-created'],
+    ];
+    const rows = BuildTableRows(columns, gDomainsInfo);
+    const tablePlace = document.getElementById('v-domain-list');
+    tablePlace.innerHTML = '';
+    tablePlace.appendChild(makeTable(rows, 'v-table v-domain-table v-info-table'));
+};
+function DisplayTokens() {
+    // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
+    const columns = [
+        ['id', 'tokenId', 'v-id v-tok-id'],
+        ['accountId', 'accountId', 'v-id v-tok-account'],
+        ['scope', 'scope', 'v-tok-scope'],
+        ['creation', 'creation_time', 'v-tok-created'],
+        ['expiration', 'expiration_time', 'v-tok-expire']
+    ];
+    const rows = BuildTableRows(columns, gTokensInfo);
+    const tablePlace = document.getElementById('v-token-list');
+    tablePlace.innerHTML = '';
+    tablePlace.appendChild(makeTable(rows, 'v-table v-token-table v-info-table'));
+};
+// Passed an array of entries like [columnHeader, fieldInAccount, classForDataEntry]
+// This returns an array of table rows with a header and datarows made from the data
+function BuildTableRows(pColumnInfo: string[][], pData: any[]): HTMLElement[] {
+    const rows: HTMLElement[] = [];
+    // Add row of headers
+    rows.push(makeRow(pColumnInfo.map(col => {
+        return makeHeader(col[0]);
+    }) ) );
+    // Add rows for each of the data structures
+    if (pData) {
+        pData.forEach( info => {
+            rows.push( makeRow(pColumnInfo.map( col => {
+                return makeData((info as Indexable)[col[1]], col[2]);
+            })));
+        });
+    };
+    return rows;
 };
 
 function makeTable(contents: any, aClass?: string): HTMLElement {
@@ -386,9 +532,8 @@ function makeImage(src: string, aClass?: string): HTMLElement {
     img.setAttribute('src', src);
     return img;
 };
-function makeText(contents?: any): Text {
-    const tex = document.createTextNode(contents);
-    return tex;
+function makeText(contents: string): Text {
+    return document.createTextNode(contents);
 };
 // Make a DOM element of 'type'.
 // If 'contents' is:
@@ -402,29 +547,30 @@ function makeElement(type: string, contents?: any, aClass?: string): HTMLElement
     if (aClass) {
         elem.setAttribute('class', aClass);
     }
-    if (contents) {
+    if (typeof(contents) !== 'undefined') {
         if (Array.isArray(contents)) {
             contents.forEach(ent => {
                 if (typeof(ent) !== 'undefined') {
-                    if (typeof(contents) === 'string') {
-                        elem.appendChild(makeText(contents));
-                    }
-                    else {
-                        elem.appendChild(ent);
-                    }
-                }
+                    elem.appendChild(makeChild(ent));
+                };
             });
         }
         else {
-            if (typeof(contents) === 'string') {
-                elem.appendChild(makeText(contents));
-            }
-            else {
-                elem.appendChild(contents);
-            };
+            elem.appendChild(makeChild(contents));
         };
     };
     return elem;
 };
+function makeChild(pContents: any): HTMLElement {
+    let ret = pContents;
+    switch ( typeof(pContents) ) {
+        case 'string': ret = makeText(pContents); break;
+        case 'number': ret = makeText(pContents.toString()); break;
+        case 'boolean': ret = makeText(pContents.toString()); break;
+        case 'undefined': ret = makeText('undefined'); break;
+        default: break;
+    }
+    return ret;
+}
 
 // vim: set tabstop=4 shiftwidth=4 autoindent expandtab
