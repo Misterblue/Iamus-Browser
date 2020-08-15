@@ -31,7 +31,8 @@ interface AuthTokenInfo {
     token: string,
     token_type: string,
     scope: string,
-    refresh_token: string
+    refresh_token: string,
+    accountId: string
 };
 interface AccountInfo {
     accountId: string,
@@ -230,7 +231,8 @@ function OpGetDomainToken(evnt: Event): void {
     });
 };
 function OpAccountList(evnt: Event): void {
-    FetchAccountList()
+    const asAdmin = (document.getElementById('v-checkbox-asadmin') as HTMLInputElement).checked;
+    FetchAccountList(asAdmin)
     .then( acctList => {
         DebugLog('OpAccountList: accounts fetched: ' + acctList.length);
         gAccountsInfo = acctList;
@@ -241,7 +243,8 @@ function OpAccountList(evnt: Event): void {
     });
 };
 function OpDomainList(evnt: Event): void {
-    FetchDomainList()
+    const asAdmin = (document.getElementById('v-checkbox-asadmin') as HTMLInputElement).checked;
+    FetchDomainList(asAdmin)
     .then( domList => {
         DebugLog('OpDomainsList: domains fetched: ' + domList.length);
         gDomainsInfo = domList;
@@ -252,7 +255,8 @@ function OpDomainList(evnt: Event): void {
     });
 };
 function OpTokenList(evnt: Event): void {
-    FetchTokenList()
+    const asAdmin = (document.getElementById('v-checkbox-asadmin') as HTMLInputElement).checked;
+    FetchTokenList(asAdmin)
     .then( tokList => {
         DebugLog('OpTokenList: tokens fetched: ' + tokList.length);
         gTokensInfo = tokList;
@@ -310,7 +314,8 @@ function GetUserAccessToken(pUsername: string, pPassword: string): Promise<AuthT
                             'token': response.access_token,
                             'token_type': response.token_type,
                             'scope': response.scope,
-                            'refresh_token': response.refresh_token
+                            'refresh_token': response.refresh_token,
+                            'accountId': response.account_id
                         } as AuthTokenInfo );
                     };
                 }
@@ -392,22 +397,22 @@ function CreateUserAccount(pUsername: string, pPassword: string, pEmail: string)
         request.send(requestData);
     });
 };
-function FetchAccountList(): Promise<any[]> {
-    return GetDataFromServer(API_GET_ACCOUNTS, 'accounts');
+function FetchAccountList(pAsAdmin: boolean): Promise<any[]> {
+    return GetDataFromServer(API_GET_ACCOUNTS, 'accounts', pAsAdmin ? 'asAdmin' : undefined);
 };
-function FetchDomainList(): Promise<any[]> {
-    return GetDataFromServer(API_GET_DOMAINS, 'domains');
+function FetchDomainList(pAsAdmin: boolean): Promise<any[]> {
+    return GetDataFromServer(API_GET_DOMAINS, 'domains', pAsAdmin ? 'asAdmin' : undefined);
 };
 // Return a Promise for a request to the server and return the 'data' that is fetched.
-function FetchTokenList(): Promise<any[]> {
-    return GetDataFromServer(API_GET_TOKENS, 'tokens');
+function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
+    return GetDataFromServer(API_GET_TOKENS, 'tokens', pAsAdmin ? 'asAdmin' : undefined);
 };
 // Return a Promise for a request to the server and return the 'data' that is fetched.
 // If there are any errors, the Promise is rejected with a text error.
 // If 'pDataField' is passed, what is returned is 'data[pDataField]' otherwise
 //    the whole 'data' structure is returned.
 // Note: this also sends the gLoginTokenInfo info in the Authorization header.
-function GetDataFromServer(pBaseUrl: string, pDataField?: string): Promise<any[]> {
+function GetDataFromServer(pBaseUrl: string, pDataField?: string, pQuery?: string): Promise<any[]> {
     return new Promise( (resolve, reject) => {
         const request = new XMLHttpRequest();
         request.onreadystatechange = function() {
@@ -426,7 +431,8 @@ function GetDataFromServer(pBaseUrl: string, pDataField?: string): Promise<any[]
                 };
             };
         };
-        request.open("GET", ServerURL() + pBaseUrl);
+        const query: string = isNullOrEmpty(pQuery) ? '' : '?' + pQuery ;
+        request.open("GET", ServerURL() + pBaseUrl + query);
         request.setRequestHeader('Authorization', `${gLoginTokenInfo.token_type} ${gLoginTokenInfo.token}`);
         request.send();
     });
@@ -438,6 +444,7 @@ function DisplaySuccessfulLogin(username: string, tokenInfo: AuthTokenInfo): voi
     gLoginTokenInfo = tokenInfo;
     SetTextInElement('v-loggedin-username', username);
     SetTextInElement('v-loggedin-authtoken', tokenInfo.token);
+    SetTextInElement('v-loggedin-accountid', tokenInfo.accountId);
 };
 function DisplayDomainToken(domainToken: AuthToken): void {
     gDomainToken = domainToken;
@@ -452,17 +459,14 @@ function DisplayAccounts() {
         ['admin', 'administrator', 'v-acct-admin'],
         ['whenCreated', 'when_account_created', 'v-acct-created']
     ];
-    const rows = BuildTableRows(columns, gAccountsInfo);
-    const tablePlace = document.getElementById('v-account-list');
-    tablePlace.innerHTML = '';
-    tablePlace.appendChild(makeTable(rows, 'v-table v-acct-table v-info-table'));
+    BuildTable(columns, gAccountsInfo, 'v-acct-table');
 };
 function DisplayDomains() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
     const columns = [
         ['id', 'domainId', 'v-id v-dom-id'],
         ['place', 'place_name', 'v-dom-place'],
-        ['sponser', 'sponser_account', 'v-id v-dom-sponser'],
+        ['sponser', 'sponser_accountid', 'v-id v-dom-sponser'],
         ['version', 'version', 'v-dom-version'],
         ['netaddr', 'network_addr', 'v-dom-netaddr'],
         ['users', 'num_users', 'v-dom-users'],
@@ -474,10 +478,7 @@ function DisplayDomains() {
         ['last heartbeat', 'time_of_last_heartbeat', 'v-dom-lasthb'],
         ['created', 'when_domain_entry_created', 'v-dom-created'],
     ];
-    const rows = BuildTableRows(columns, gDomainsInfo);
-    const tablePlace = document.getElementById('v-domain-list');
-    tablePlace.innerHTML = '';
-    tablePlace.appendChild(makeTable(rows, 'v-table v-domain-table v-info-table'));
+    BuildTable(columns, gDomainsInfo, 'v-domain-table');
 };
 function DisplayTokens() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
@@ -488,10 +489,14 @@ function DisplayTokens() {
         ['creation', 'creation_time', 'v-tok-created'],
         ['expiration', 'expiration_time', 'v-tok-expire']
     ];
-    const rows = BuildTableRows(columns, gTokensInfo);
-    const tablePlace = document.getElementById('v-token-list');
+    BuildTable(columns, gTokensInfo, 'v-token-table');
+};
+// Build the table with the passed column info into the one table place
+function BuildTable(pColumnInfo: string[][], pData: any[], pTableClass: string) {
+    const rows = BuildTableRows(pColumnInfo, pData);
+    const tablePlace = document.getElementById('v-table-list');
     tablePlace.innerHTML = '';
-    tablePlace.appendChild(makeTable(rows, 'v-table v-token-table v-info-table'));
+    tablePlace.appendChild(makeTable(rows, `v-table ${pTableClass} v-info-table`));
 };
 // Passed an array of entries like [columnHeader, fieldInAccount, classForDataEntry]
 // This returns an array of table rows with a header and datarows made from the data
@@ -571,6 +576,14 @@ function makeChild(pContents: any): HTMLElement {
         default: break;
     }
     return ret;
+}
+function isNullOrEmpty(pThing: any): boolean {
+    return typeof(pThing) === 'undefined'
+            || pThing === null
+            || ( typeof(pThing) === 'string' && (pThing as string).length === 0 ) ;
+}
+function isNotNullOrEmpty(pThing: any): boolean {
+    return ! isNullOrEmpty(pThing);
 }
 
 // vim: set tabstop=4 shiftwidth=4 autoindent expandtab

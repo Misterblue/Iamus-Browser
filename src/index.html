@@ -72,9 +72,7 @@
       </table>
       <ul class="nav nav-pills">
         <li class="nav-item active"><a href="#tabLogin" class="nav-link active" data-toggle="tab">Login</a></li>
-        <li class="nav-item"><a href="#tabAccounts" class="nav-link" data-toggle="tab">Accounts</a></li>
-        <li class="nav-item"><a href="#tabDomains" class="nav-link" data-toggle="tab">Domains</a></li>
-        <li class="nav-item"><a href="#tabTokens" class="nav-link" data-toggle="tab">Tokens</a></li>
+        <li class="nav-item"><a href="#tabTables" class="nav-link" data-toggle="tab">Tables</a></li>
       </ul>
       <div class="tab-content">
         <div class="tab-pane fade show active" id="tabLogin">
@@ -84,6 +82,10 @@
               <tr>
                 <td class='v-td-label'> Username: </td>
                 <td class='v-td-data'> <span id="v-loggedin-username"></span></td>
+              </tr>
+              <tr>
+                <td class='v-td-label'> AccountId: </td>
+                <td class='v-td-data'> <span id="v-loggedin-accountid"></span></td>
               </tr>
               <tr>
                 <td class='v-td-label'> AuthToken: </td>
@@ -124,17 +126,15 @@
             <button type="button" class="v-button clickable" op="OpCreateAccount">Create Account</button>
           </fieldset>
         </div>
-        <div class="tab-pane fade" id="tabAccounts">
+        <div class="tab-pane fade" id="tabTables">
           <button type="button" class="v-button clickable" op="OpAccountList">Update Accounts</button>
-          <div id="v-account-list"></div>
-        </div>
-        <div class="tab-pane fade" id="tabDomains">
           <button type="button" class="v-button clickable" op="OpDomainList">Update Domains</button>
-          <div id="v-domain-list"></div>
-        </div>
-        <div class="tab-pane fade" id="tabTokens">
           <button type="button" class="v-button clickable" op="OpTokenList">Update Tokens</button>
-          <div id="v-token-list"></div>
+          <div>
+            <input type="checkbox" id="v-checkbox-asadmin" value="asAdmin"></input>
+            AsAdmin 
+          </div>
+          <div id="v-table-list"></div>
         </div>
       </div>
     </div>
