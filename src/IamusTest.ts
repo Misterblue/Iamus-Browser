@@ -20,6 +20,7 @@ const API_GET_TOKEN = '/api/v1/token/new';
 const API_GET_ACCOUNTS = '/api/v1/accounts';
 const API_GET_DOMAINS = '/api/v1/domains';
 const API_GET_TOKENS = '/api/v1/tokens';
+const API_GET_MAINT_RAW = '/api/maint/raw';
 
 // a casting interface used to index fields of an object (the *Info's, for instance)
 interface Indexable {
@@ -119,6 +120,9 @@ function DoOnClickable(evnt: Event): void {
         const buttonFunc = window[buttonOp];
         if (typeof(buttonFunc) === 'function') {
             buttonFunc(evnt);
+        }
+        else {
+            ErrorLog(`DoOnClickable: attempt to do non-function ${buttonOp}`);
         };
     };
 };
@@ -264,6 +268,25 @@ function OpTokenList(evnt: Event): void {
     })
     .catch( err => {
         ErrorLog('Could not fetch tokens: ' + err);
+    });
+};
+function OpRawUpdated(evnt: Event): void {
+    DebugLog('OpRawUpdated');
+    const collection = GetElementValue('v-raw-collection');
+    const field = GetElementValue('v-raw-field');
+    const value = GetElementValue('v-raw-value');
+
+    const fetchURL = API_GET_MAINT_RAW + '/' + collection + '/' + field + '/' + value;
+    DebugLog('Fetching ' + fetchURL);
+    GetDataFromServer(fetchURL)
+    .then( data => {
+        DebugLog('Response received ');
+        const dataPlace = document.getElementById('v-raw-display');
+        dataPlace.innerHTML = '';
+        dataPlace.appendChild(makeText(JSON.stringify(data, null, '  ')));
+    })
+    .catch( err => {
+        ErrorLog('Error fetching raw data: ' + err);
     });
 };
 // ============================================================================
@@ -412,7 +435,7 @@ function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
 // If 'pDataField' is passed, what is returned is 'data[pDataField]' otherwise
 //    the whole 'data' structure is returned.
 // Note: this also sends the gLoginTokenInfo info in the Authorization header.
-function GetDataFromServer(pBaseUrl: string, pDataField?: string, pQuery?: string): Promise<any[]> {
+function GetDataFromServer(pBaseUrl: string, pDataField?: string, pQuery?: string): Promise<any[] | any> {
     return new Promise( (resolve, reject) => {
         const request = new XMLHttpRequest();
         request.onreadystatechange = function() {
