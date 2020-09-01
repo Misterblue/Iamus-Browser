@@ -129,6 +129,7 @@
         </div>
         <div class="tab-pane fade" id="tabTables">
           <button type="button" class="v-button clickable" op="OpAccountList">Update Accounts</button>
+          <button type="button" class="v-button clickable" op="OpUserList">Update Users</button>
           <button type="button" class="v-button clickable" op="OpDomainList">Update Domains</button>
           <button type="button" class="v-button clickable" op="OpTokenList">Update Tokens</button>
           <div>
@@ -153,6 +154,13 @@
             </tr>
           </table>
           <button type="button" class="v-button clickable" op="OpRawUpdated">Update</button>
+          <table class="v-table">
+            <tr>
+              <td class='v-td-label'> API: </td>
+              <td class='v-td-input'> <input id="v-raw-pai" type="text" size="50" maxlength="120" value="/api/v1/..."/> </td>
+            </tr>
+          </table>
+          <button type="button" class="v-button clickable" op="OpRawAPI">Do Request</button>
           <div id="v-raw-display"></div>
         </div>
       </div>

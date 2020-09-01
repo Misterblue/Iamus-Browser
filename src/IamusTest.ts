@@ -18,6 +18,7 @@ const API_ACCOUNT_LOGIN = '/oauth/token';
 const API_ACCOUNT_CREATE = '/api/v1/users';
 const API_GET_TOKEN = '/api/v1/token/new';
 const API_GET_ACCOUNTS = '/api/v1/accounts';
+const API_GET_USERS = '/api/v1/users';
 const API_GET_DOMAINS = '/api/v1/domains';
 const API_GET_TOKENS = '/api/v1/tokens';
 const API_GET_MAINT_RAW = '/api/maint/raw';
@@ -61,6 +62,25 @@ interface AccountInfo {
     whenAccountCreated: string,
     timeOfLastHeartbeat: string,
 };
+interface UserInfo {
+    accountId: string,
+    username: string,
+    images: {
+        tiny: string,
+        hero: string,
+        thumbnail: string
+    },
+    location: {
+        connected: boolean,
+        path: string,
+        placeId: string,
+        domainId: string,
+        networkAddress: string,
+        networkPort: number,
+        nodeId: string,
+        discoverability: string // one of 'none', 'friends', 'connections', 'all'
+    }
+};
 interface DomainInfo {
     domainid: string,
     place_name: string,
@@ -101,6 +121,7 @@ let gLoginUser = '';
 let gLoginTokenInfo: AuthTokenInfo = {} as AuthTokenInfo;
 let gDomainToken: AuthToken = {} as AuthToken;
 let gAccountsInfo: AccountInfo[];
+let gUsersInfo: UserInfo[];
 let gDomainsInfo: DomainInfo[];
 let gTokensInfo: TokenInfo[];
 
@@ -115,7 +136,7 @@ document.addEventListener('DOMContentLoaded', ev => {
 function DoOnClickable(evnt: Event): void {
     const buttonOp = (evnt.target as HTMLElement).getAttribute('op');
     if (buttonOp) {
-        DebugLog('DoOnClickable: click op ' + buttonOp);
+        // DebugLog('DoOnClickable: click op ' + buttonOp);
         // @ts-ignore
         const buttonFunc = window[buttonOp];
         if (typeof(buttonFunc) === 'function') {
@@ -244,6 +265,18 @@ function OpAccountList(evnt: Event): void {
     })
     .catch( err => {
         ErrorLog('Could not fetch accounts: ' + err);
+    });
+};
+function OpUserList(evnt: Event): void {
+    const asAdmin = (document.getElementById('v-checkbox-asadmin') as HTMLInputElement).checked;
+    FetchUserList(asAdmin)
+    .then( userList => {
+        DebugLog('OpUserList: users fetched: ' + userList.length);
+        gUsersInfo = userList;
+        DisplayUsers();
+    })
+    .catch( err => {
+        ErrorLog('Could not fetch users: ' + err);
     });
 };
 function OpDomainList(evnt: Event): void {
@@ -423,6 +456,9 @@ function CreateUserAccount(pUsername: string, pPassword: string, pEmail: string)
 function FetchAccountList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_ACCOUNTS, 'accounts', pAsAdmin ? 'asAdmin' : undefined);
 };
+function FetchUserList(pAsAdmin: boolean): Promise<any[]> {
+    return GetDataFromServer(API_GET_USERS, 'users', pAsAdmin ? 'asAdmin' : undefined);
+};
 function FetchDomainList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_DOMAINS, 'domains', pAsAdmin ? 'asAdmin' : undefined);
 };
@@ -483,6 +519,14 @@ function DisplayAccounts() {
         ['whenCreated', 'when_account_created', 'v-acct-created']
     ];
     BuildTable(columns, gAccountsInfo, 'v-acct-table');
+};
+function DisplayUsers() {
+    // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
+    const columns = [
+        ['id', 'accountId', 'v-id v-acct-id'],
+        ['name', 'username', 'v-acct-name']
+    ];
+    BuildTable(columns, gUsersInfo, 'v-acct-table');
 };
 function DisplayDomains() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
