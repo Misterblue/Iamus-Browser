@@ -303,6 +303,48 @@ function OpTokenList(evnt: Event): void {
         ErrorLog('Could not fetch tokens: ' + err);
     });
 };
+function OpDeleteAccount(evnt: Event): void {
+    const accountId = GetElementValue('v-delete-account-accountId');
+
+    const opURL = '/api/v1/account/' + accountId;
+
+    DoDeleteOp(gLoginTokenInfo, opURL)
+    .then( result => {
+        DebugLog('Response received: ' + JSON.stringify(result));
+    })
+    .catch ( err => {
+        ErrorLog('DeleteAccount: exception: ' + err);
+    });
+};
+function OpDeleteDomain(evnt: Event): void {
+    const domainId = GetElementValue('v-delete-domain-domainId');
+
+    const opURL = '/api/v1/domains/' + domainId;
+
+    DoDeleteOp(gLoginTokenInfo, opURL)
+    .then( result => {
+        DebugLog('Response received: ' + JSON.stringify(result));
+    })
+    .catch ( err => {
+        ErrorLog('DeleteDomain: exception: ' + err);
+    });
+};
+function OpDeleteToken(evnt: Event): void {
+    const accountId = GetElementValue('v-delete-token-accountId');
+    const tokenId = GetElementValue('v-delete-token-tokenId');
+
+    const opURL = '/api/v1/account/' + accountId + '/tokens/' + tokenId;
+
+    DoDeleteOp(gLoginTokenInfo, opURL)
+    .then( result => {
+        DebugLog('Response received: ' + JSON.stringify(result));
+    })
+    .catch ( err => {
+        ErrorLog('DeleteDomain: exception: ' + err);
+    });
+};
+    // '/api/v1/user/friends/:username'
+    // '/api/v1/user/roles/:role'
 function OpRawUpdated(evnt: Event): void {
     DebugLog('OpRawUpdated');
     const collection = GetElementValue('v-raw-collection');
@@ -443,14 +485,43 @@ function CreateUserAccount(pUsername: string, pPassword: string, pEmail: string)
                         }
                         else {
                             reject('Account creation failed');
-                        }
-                    }
-                }
-            }
+                        };
+                    };
+                };
+            };
         };
         request.open('POST', ServerURL() + API_ACCOUNT_CREATE);
         request.setRequestHeader('Content-type', 'application/json');
         request.send(requestData);
+    });
+};
+function DoDeleteOp(pAccountTokenInfo: AuthTokenInfo, pURL: string) {
+    return new Promise( (resolve , reject) => {
+        const request = new XMLHttpRequest();
+        request.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    const response = JSON.parse(request.responseText);
+                    if (response.status && response.status === 'success') {
+                        // Successful account creation
+                        DebugLog('Successful delete');
+                        resolve();
+                    }
+                    else {
+                        if (response.data || response.error) {
+                            reject('Deletion failed: ' + JSON.stringify(response));
+                        }
+                        else {
+                            reject('Deletion failed');
+                        }
+                    };
+                };
+            };
+        };
+        request.open('DELETE', ServerURL() + pURL);
+        request.setRequestHeader('Authorization',
+                        pAccountTokenInfo.token_type + ' ' + pAccountTokenInfo.token);
+        request.send();
     });
 };
 function FetchAccountList(pAsAdmin: boolean): Promise<any[]> {

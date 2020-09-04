@@ -73,6 +73,7 @@
       <ul class="nav nav-pills">
         <li class="nav-item active"><a href="#tabLogin" class="nav-link active" data-toggle="tab">Login</a></li>
         <li class="nav-item"><a href="#tabTables" class="nav-link" data-toggle="tab">Tables</a></li>
+        <li class="nav-item"><a href="#tabDelete" class="nav-link" data-toggle="tab">Delete</a></li>
         <li class="nav-item"><a href="#tabRaw" class="nav-link" data-toggle="tab">Raw</a></li>
       </ul>
       <div class="tab-content">
@@ -137,6 +138,45 @@
             AsAdmin 
           </div>
           <div id="v-table-list"></div>
+        </div>
+        <div class="tab-pane fade" id="tabDelete">
+          <fieldset class="v-fieldset">
+            <legend>Delete Account</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> AccountId: </td>
+                <td class='v-td-input'> <input id="v-delete-account-accountId" type="text" size="50" maxlength="120" value="accountId"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpDeleteAccount">Delete Account</button>
+            <div id="v-delete-account-display"></div>
+          </fieldset>
+          <fieldset class="v-fieldset">
+            <legend>Delete Domain</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> DomainId: </td>
+                <td class='v-td-input'> <input id="v-delete-domain-domainId" type="text" size="50" maxlength="120" value="domainId"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpDeleteDomain">Delete Domain</button>
+            <div id="v-delete-domain-display"></div>
+          </fieldset>
+          <fieldset class="v-fieldset">
+            <legend>Delete Token</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> AccountId: </td>
+                <td class='v-td-input'> <input id="v-delete-token-accountId" type="text" size="50" maxlength="120" value="accountId"/> </td>
+              </tr>
+              <tr>
+                <td class='v-td-label'> TokenId: </td>
+                <td class='v-td-input'> <input id="v-delete-token-tokenId" type="text" size="50" maxlength="120" value="tokenId"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpDeleteToken">Delete Token</button>
+            <div id="v-delete-token-display"></div>
+          </fieldset>
         </div>
         <div class="tab-pane fade" id="tabRaw">
           <table class="v-table">
