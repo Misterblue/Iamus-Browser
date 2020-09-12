@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', ev => {
 function DoOnClickable(evnt: Event): void {
     const buttonOp = (evnt.target as HTMLElement).getAttribute('op');
     if (buttonOp) {
-        // DebugLog('DoOnClickable: click op ' + buttonOp);
+        DebugLog('DoOnClickable: click op ' + buttonOp);
         // @ts-ignore
         const buttonFunc = window[buttonOp];
         if (typeof(buttonFunc) === 'function') {
@@ -192,8 +192,14 @@ function SetTextInElement(elementId: string, theText: string): void {
     theElement.innerHTML = '';
     theElement.appendChild(textNode);
 };
+// Fetch and return the metaverse-server URL.
+// Removes trailing slashes as things get confused if it exists.
 function ServerURL(): string {
-    return GetElementValue('v-server-url');
+    let theURL = GetElementValue('v-server-url');
+    while (theURL.endsWith('/')) {
+        theURL = theURL.slice(0, -1);
+    };
+    return theURL;
 };
 
 function OpCreateAccount(evnt: Event): void {
@@ -525,17 +531,17 @@ function DoDeleteOp(pAccountTokenInfo: AuthTokenInfo, pURL: string) {
     });
 };
 function FetchAccountList(pAsAdmin: boolean): Promise<any[]> {
-    return GetDataFromServer(API_GET_ACCOUNTS, 'accounts', pAsAdmin ? 'asAdmin' : undefined);
+    return GetDataFromServer(API_GET_ACCOUNTS, 'accounts', pAsAdmin ? 'asAdmin=true' : undefined);
 };
 function FetchUserList(pAsAdmin: boolean): Promise<any[]> {
-    return GetDataFromServer(API_GET_USERS, 'users', pAsAdmin ? 'asAdmin' : undefined);
+    return GetDataFromServer(API_GET_USERS, 'users', pAsAdmin ? 'asAdmin=true' : undefined);
 };
 function FetchDomainList(pAsAdmin: boolean): Promise<any[]> {
-    return GetDataFromServer(API_GET_DOMAINS, 'domains', pAsAdmin ? 'asAdmin' : undefined);
+    return GetDataFromServer(API_GET_DOMAINS, 'domains', pAsAdmin ? 'asAdmin=true' : undefined);
 };
 // Return a Promise for a request to the server and return the 'data' that is fetched.
 function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
-    return GetDataFromServer(API_GET_TOKENS, 'tokens', pAsAdmin ? 'asAdmin' : undefined);
+    return GetDataFromServer(API_GET_TOKENS, 'tokens', pAsAdmin ? 'asAdmin=true' : undefined);
 };
 // Return a Promise for a request to the server and return the 'data' that is fetched.
 // If there are any errors, the Promise is rejected with a text error.
