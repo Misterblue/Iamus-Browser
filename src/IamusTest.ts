@@ -370,6 +370,74 @@ function OpRawUpdated(evnt: Event): void {
         ErrorLog('Error fetching raw data: ' + err);
     });
 };
+function OpGetRawAPI(evnt: Event): void {
+    DebugLog('OpGetRawAPI');
+    const getURL = GetElementValue('v-raw-api-get');
+
+    const request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE) {
+            if (this.status === 200) {
+                const response = JSON.parse(request.responseText);
+                DebugLog("Login response = " + request.responseText);
+                if (response.error) {
+                    // There was an error logging in
+                    ErrorLog(response.error);
+                }
+                else {
+                    const dataPlace = document.getElementById('v-raw-display');
+                    dataPlace.innerHTML = '';
+                    dataPlace.appendChild(makeText(JSON.stringify(response, null, '  ')));
+                };
+            }
+            else {
+                ErrorLog("Failed fetch");
+            };
+        }
+    };
+    request.open("GET", ServerURL() + getURL);
+    request.setRequestHeader('Authorization',
+            gLoginTokenInfo.token_type + ' ' + gLoginTokenInfo.token);
+    request.send();
+};
+function OpPostRawAPI(evnt: Event): void {
+    DebugLog('OpPostRawAPI');
+    const postURL = GetElementValue('v-raw-api-post');
+    const postContentsJSON = GetElementValue('v-raw-api-post-data');
+    try {
+        const postContents = JSON.parse(postContentsJSON);
+
+        const request = new XMLHttpRequest();
+        request.onreadystatechange = function() {
+            if (this.readyState === XMLHttpRequest.DONE) {
+                if (this.status === 200) {
+                    const response = JSON.parse(request.responseText);
+                    DebugLog("Login response = " + request.responseText);
+                    if (response.error) {
+                        // There was an error logging in
+                        ErrorLog(response.error);
+                    }
+                    else {
+                        const dataPlace = document.getElementById('v-raw-display');
+                        dataPlace.innerHTML = '';
+                        dataPlace.appendChild(makeText(JSON.stringify(response, null, '  ')));
+                    };
+                }
+                else {
+                    ErrorLog(`POST failed: ${this.status}`);
+                };
+            }
+        };
+        request.open("POST", ServerURL() + postURL);
+        request.setRequestHeader('Content-type', 'application/json');
+        request.setRequestHeader('Authorization',
+                gLoginTokenInfo.token_type + ' ' + gLoginTokenInfo.token);
+        request.send(JSON.stringify(postContents));
+    }
+    catch (err) {
+        ErrorLog(`Parsing of input JSON failed: "${postContentsJSON}" => ${err}`);
+    };
+};
 // ============================================================================
 // Use account information to get account token and use that to get domain token
 function GetDomainTokenWithAccount(pUsername: string, pPassword: string): Promise<AuthToken> {

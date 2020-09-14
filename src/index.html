@@ -179,28 +179,48 @@
           </fieldset>
         </div>
         <div class="tab-pane fade" id="tabRaw">
-          <table class="v-table">
-            <tr>
-              <td class='v-td-label'> Collection: </td>
-              <td class='v-td-input'> <input id="v-raw-collection" type="text" size="50" maxlength="120" value="accounts"/> </td>
-            </tr>
-            <tr>
-              <td class='v-td-label'> Field: </td>
-              <td class='v-td-input'> <input id="v-raw-field" type="text" size="50" maxlength="120" value="accountId"/> </td>
-            </tr>
-            <tr>
-              <td class='v-td-label'> Value: </td>
-              <td class='v-td-input'> <input id="v-raw-value" type="text" size="50" maxlength="120" value="xx"/> </td>
-            </tr>
-          </table>
-          <button type="button" class="v-button clickable" op="OpRawUpdated">Update</button>
-          <table class="v-table">
-            <tr>
-              <td class='v-td-label'> API: </td>
-              <td class='v-td-input'> <input id="v-raw-pai" type="text" size="50" maxlength="120" value="/api/v1/..."/> </td>
-            </tr>
-          </table>
-          <button type="button" class="v-button clickable" op="OpRawAPI">Do Request</button>
+          <fieldset class="v-fieldset">
+            <legend>Raw Table Lookup</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> Collection: </td>
+                <td class='v-td-input'> <input id="v-raw-collection" type="text" size="50" maxlength="120" value="accounts"/> </td>
+              </tr>
+              <tr>
+                <td class='v-td-label'> Field: </td>
+                <td class='v-td-input'> <input id="v-raw-field" type="text" size="50" maxlength="120" value="accountId"/> </td>
+              </tr>
+              <tr>
+                <td class='v-td-label'> Value: </td>
+                <td class='v-td-input'> <input id="v-raw-value" type="text" size="50" maxlength="120" value="xx"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpRawUpdated">Update</button>
+          </fieldset>
+          <fieldset class="v-fieldset">
+            <legend>Raw API GET</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> API: </td>
+                <td class='v-td-input'> <input id="v-raw-api-get" type="text" size="50" maxlength="120" value="/api/v1/..."/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpGetRawAPI">Do Request</button>
+          </fieldset>
+          <fieldset class="v-fieldset">
+            <legend>Raw API POST</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> API: </td>
+                <td class='v-td-input'> <input id="v-raw-api-post" type="text" size="50" maxlength="120" value="/api/v1/..."/> </td>
+              </tr>
+              <tr>
+                <td class='v-td-label'> API: </td>
+                <td class='v-td-input'> <input id="v-raw-api-post-data" type="text" size="50" maxlength="120" value="{ JSON }"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpPostRawAPI">Do Request</button>
+          </fieldset>
           <div id="v-raw-display"></div>
         </div>
       </div>
