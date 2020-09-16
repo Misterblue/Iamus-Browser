@@ -677,7 +677,7 @@ function DisplayDomains() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
     const columns = [
         ['id', 'domainId', 'v-id v-dom-id'],
-        ['place', 'place_name', 'v-dom-place'],
+        ['name', 'name', 'v-dom-place'],
         ['sponser', 'sponser_accountid', 'v-id v-dom-sponser'],
         ['version', 'version', 'v-dom-version'],
         ['netaddr', 'network_addr', 'v-dom-netaddr'],
