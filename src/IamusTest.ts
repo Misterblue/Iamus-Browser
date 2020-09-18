@@ -21,6 +21,7 @@ const API_GET_ACCOUNTS = '/api/v1/accounts';
 const API_GET_USERS = '/api/v1/users';
 const API_GET_DOMAINS = '/api/v1/domains';
 const API_GET_TOKENS = '/api/v1/tokens';
+const API_GET_PLACES = '/api/v1/user/places';
 const API_GET_MAINT_RAW = '/api/maint/raw';
 
 // a casting interface used to index fields of an object (the *Info's, for instance)
@@ -115,6 +116,20 @@ interface TokenInfo {
     creation_time: string,
     expiration_time: string
 };
+interface DomainInfoSmall {
+    id: string,
+    name: string,
+    network_address: string,
+    ice_server_address: string
+};
+interface PlaceInfo {
+    'placeId': string,
+    'name': string,
+    'address': string,
+    'description': string,
+    'domain': DomainInfoSmall,
+    'accountId': string
+};
 
 // Information on current user
 let gLoginUser = '';
@@ -124,6 +139,7 @@ let gAccountsInfo: AccountInfo[];
 let gUsersInfo: UserInfo[];
 let gDomainsInfo: DomainInfo[];
 let gTokensInfo: TokenInfo[];
+let gPlacesInfo: PlaceInfo[];
 
 document.addEventListener('DOMContentLoaded', ev => {
     // Make all 'class=clickable' page items create events
@@ -307,6 +323,18 @@ function OpTokenList(evnt: Event): void {
     })
     .catch( err => {
         ErrorLog('Could not fetch tokens: ' + err);
+    });
+};
+function OpPlacesList(evnt: Event): void {
+    const asAdmin = (document.getElementById('v-checkbox-asadmin') as HTMLInputElement).checked;
+    FetchPlacesList(asAdmin)
+    .then( placeList => {
+        DebugLog('OpPlacesList: places fetched: ' + placeList.length);
+        gPlacesInfo = placeList;
+        DisplayPlaces();
+    })
+    .catch( err => {
+        ErrorLog('Could not fetch places: ' + err);
     });
 };
 function OpDeleteAccount(evnt: Event): void {
@@ -611,6 +639,9 @@ function FetchDomainList(pAsAdmin: boolean): Promise<any[]> {
 function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_TOKENS, 'tokens', pAsAdmin ? 'asAdmin=true' : undefined);
 };
+function FetchPlacesList(pAsAdmin: boolean): Promise<any[]> {
+    return GetDataFromServer(API_GET_PLACES, 'places', pAsAdmin ? 'asAdmin=true' : undefined);
+};
 // Return a Promise for a request to the server and return the 'data' that is fetched.
 // If there are any errors, the Promise is rejected with a text error.
 // If 'pDataField' is passed, what is returned is 'data[pDataField]' otherwise
@@ -703,6 +734,18 @@ function DisplayTokens() {
     ];
     BuildTable(columns, gTokensInfo, 'v-token-table');
 };
+function DisplayPlaces() {
+    // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
+    const columns = [
+        ['id', 'placeId', 'v-id v-tok-id'],
+        ['name', 'name', 'v-id v-tok-name'],
+        ['address', 'address', 'v-tok-address'],
+        ['description', 'description', 'v-tok-description'],
+        ['domain', 'domain.id', 'v-id v-tok-domain'],
+        ['account', 'accountId', 'v-id v-tok-account']
+    ];
+    BuildTable(columns, gPlacesInfo, 'v-places-table');
+};
 // Build the table with the passed column info into the one table place
 function BuildTable(pColumnInfo: string[][], pData: any[], pTableClass: string) {
     const rows = BuildTableRows(pColumnInfo, pData);
@@ -722,7 +765,19 @@ function BuildTableRows(pColumnInfo: string[][], pData: any[]): HTMLElement[] {
     if (pData) {
         pData.forEach( info => {
             rows.push( makeRow(pColumnInfo.map( col => {
-                return makeData((info as Indexable)[col[1]], col[2]);
+                const fieldPieces = col[1].split('.');
+                let source: any = info;
+                fieldPieces.forEach( level => {
+                    DebugLog(`BuildTableRows: ${col[1]} ${level}`)
+                    if (source && source.hasOwnProperty(level)) {
+                        source = source[level];
+                        DebugLog(`BuildTableRows: updated source`)
+                    };
+                });
+                if (typeof(source) === 'undefined' || source === null) {
+                    source = '.';
+                }
+                return makeData(source, col[2]);
             })));
         });
     };
