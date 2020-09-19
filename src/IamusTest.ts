@@ -768,16 +768,25 @@ function BuildTableRows(pColumnInfo: string[][], pData: any[]): HTMLElement[] {
                 const fieldPieces = col[1].split('.');
                 let source: any = info;
                 fieldPieces.forEach( level => {
-                    DebugLog(`BuildTableRows: ${col[1]} ${level}`)
                     if (source && source.hasOwnProperty(level)) {
                         source = source[level];
-                        DebugLog(`BuildTableRows: updated source`)
+                    }
+                    else {
+                        source = undefined;
                     };
                 });
+                // If didn't find anything for the field spec, return a dot
                 if (typeof(source) === 'undefined' || source === null) {
                     source = '.';
+                };
+                try {
+                    return makeData(source, col[2]);
                 }
-                return makeData(source, col[2]);
+                catch (err) {
+                    ErrorLog(`BuildTableRows: makeData exception for ${col[1]}: ${err}`);
+                };
+                // default cell contents if there were bad errors above
+                return makeData(',', col[2]);
             })));
         });
     };
@@ -819,7 +828,7 @@ function makeElement(type: string, contents?: any, aClass?: string): HTMLElement
     if (aClass) {
         elem.setAttribute('class', aClass);
     }
-    if (typeof(contents) !== 'undefined') {
+    if (typeof(contents) !== 'undefined' && contents !== null) {
         if (Array.isArray(contents)) {
             contents.forEach(ent => {
                 if (typeof(ent) !== 'undefined') {
