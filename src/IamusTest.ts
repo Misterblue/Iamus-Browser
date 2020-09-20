@@ -86,7 +86,7 @@ interface DomainInfo {
     domainid: string,
     place_name: string,
     public_key: string,
-    sponser_accountid: string,
+    sponsor_account_id: string,
     ice_server: string,
     version: string,
     protocol_version: string,
@@ -709,7 +709,7 @@ function DisplayDomains() {
     const columns = [
         ['id', 'domainId', 'v-id v-dom-id'],
         ['name', 'name', 'v-dom-place'],
-        ['sponser', 'sponser_accountid', 'v-id v-dom-sponser'],
+        ['sponsor', 'sponsor_account_id', 'v-id v-dom-sponsor'],
         ['version', 'version', 'v-dom-version'],
         ['netaddr', 'network_addr', 'v-dom-netaddr'],
         ['users', 'num_users', 'v-dom-users'],
