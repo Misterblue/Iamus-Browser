@@ -21,7 +21,7 @@ const API_GET_ACCOUNTS = '/api/v1/accounts';
 const API_GET_USERS = '/api/v1/users';
 const API_GET_DOMAINS = '/api/v1/domains';
 const API_GET_TOKENS = '/api/v1/tokens';
-const API_GET_PLACES = '/api/v1/user/places';
+const API_GET_PLACES = '/api/v1/places';
 const API_GET_MAINT_RAW = '/api/maint/raw';
 
 // a casting interface used to index fields of an object (the *Info's, for instance)
@@ -401,6 +401,7 @@ function OpRawUpdated(evnt: Event): void {
 function OpGetRawAPI(evnt: Event): void {
     DebugLog('OpGetRawAPI');
     const getURL = GetElementValue('v-raw-api-get');
+    const xError:boolean = (document.getElementById('v-checkbox-x-error') as HTMLInputElement).checked;
 
     const request = new XMLHttpRequest();
     request.onreadystatechange = function() {
@@ -426,12 +427,16 @@ function OpGetRawAPI(evnt: Event): void {
     request.open("GET", ServerURL() + getURL);
     request.setRequestHeader('Authorization',
             gLoginTokenInfo.token_type + ' ' + gLoginTokenInfo.token);
+    if (xError) {
+        request.setRequestHeader('x-vircadia-error-handle', `badrequest`);
+    };
     request.send();
 };
 function OpPostRawAPI(evnt: Event): void {
     DebugLog('OpPostRawAPI');
     const postURL = GetElementValue('v-raw-api-post');
     const postContentsJSON = GetElementValue('v-raw-api-post-data');
+    const xError:boolean = (document.getElementById('v-checkbox-x-error') as HTMLInputElement).checked;
     try {
         const postContents = JSON.parse(postContentsJSON);
 
@@ -460,6 +465,9 @@ function OpPostRawAPI(evnt: Event): void {
         request.setRequestHeader('Content-type', 'application/json');
         request.setRequestHeader('Authorization',
                 gLoginTokenInfo.token_type + ' ' + gLoginTokenInfo.token);
+        if (xError) {
+            request.setRequestHeader('x-vircadia-error-handle', `badrequest`);
+        };
         request.send(JSON.stringify(postContents));
     }
     catch (err) {
