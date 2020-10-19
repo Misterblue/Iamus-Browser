@@ -22,6 +22,8 @@ const API_GET_USERS = '/api/v1/users';
 const API_GET_DOMAINS = '/api/v1/domains';
 const API_GET_TOKENS = '/api/v1/tokens';
 const API_GET_PLACES = '/api/v1/places';
+const API_GET_RELATIONSHIP = '/api/v1/relationships';
+const API_GET_REQUESTS = '/api/v1/requests';
 const API_GET_MAINT_RAW = '/api/maint/raw';
 
 // a casting interface used to index fields of an object (the *Info's, for instance)
@@ -123,12 +125,26 @@ interface DomainInfoSmall {
     ice_server_address: string
 };
 interface PlaceInfo {
-    'placeId': string,
-    'name': string,
-    'address': string,
-    'description': string,
-    'domain': DomainInfoSmall,
-    'accountId': string
+    placeId: string,
+    name: string,
+    address: string,
+    description: string,
+    domain: DomainInfoSmall,
+    accountId: string
+};
+interface RequestInfoX {
+    id: string,
+    type: string,
+    requesterId: string,
+    targetId: string,
+    when_created: string,
+    expiration_time: string,
+    connection: {
+        requesting_account_id: string,
+        requestor_accepted: boolean,
+        target_account_id: string,
+        target_accepted: boolean
+    }
 };
 
 // Information on current user
@@ -140,6 +156,7 @@ let gUsersInfo: UserInfo[];
 let gDomainsInfo: DomainInfo[];
 let gTokensInfo: TokenInfo[];
 let gPlacesInfo: PlaceInfo[];
+let gRequestInfo: RequestInfoX[];
 
 document.addEventListener('DOMContentLoaded', ev => {
     // Make all 'class=clickable' page items create events
@@ -337,6 +354,18 @@ function OpPlacesList(evnt: Event): void {
         ErrorLog('Could not fetch places: ' + err);
     });
 };
+function OpRequestList(evnt: Event): void {
+    const asAdmin = (document.getElementById('v-checkbox-asadmin') as HTMLInputElement).checked;
+    FetchRequestList(asAdmin)
+    .then( requestList => {
+        DebugLog('OpRequestList: requests fetched: ' + requestList.length);
+        gRequestInfo = requestList;
+        DisplayRequests();
+    })
+    .catch( err => {
+        ErrorLog('Could not fetch relationships: ' + err);
+    });
+};
 function OpDeleteAccount(evnt: Event): void {
     const accountId = GetElementValue('v-delete-account-accountId');
 
@@ -361,6 +390,19 @@ function OpDeleteDomain(evnt: Event): void {
     })
     .catch ( err => {
         ErrorLog('DeleteDomain: exception: ' + err);
+    });
+};
+function OpDeletePlace(evnt: Event): void {
+    const placeId = GetElementValue('v-delete-place-placeId');
+
+    const opURL = '/api/v1/places/' + placeId;
+
+    DoDeleteOp(gLoginTokenInfo, opURL)
+    .then( result => {
+        DebugLog('Response received: ' + JSON.stringify(result));
+    })
+    .catch ( err => {
+        ErrorLog('DeletePlace: exception: ' + err);
     });
 };
 function OpDeleteToken(evnt: Event): void {
@@ -425,15 +467,18 @@ function OpGetRawAPI(evnt: Event): void {
         }
     };
     request.open("GET", ServerURL() + getURL);
-    request.setRequestHeader('Authorization',
-            gLoginTokenInfo.token_type + ' ' + gLoginTokenInfo.token);
+    request.setRequestHeader('Authorization', gLoginTokenInfo.token_type + ' ' + gLoginTokenInfo.token);
     if (xError) {
         request.setRequestHeader('x-vircadia-error-handle', `badrequest`);
     };
     request.send();
 };
+function OpGetRawAPIMulti(evnt: Event): void {
+    OpGetRawAPI(evnt);
+    OpGetRawAPI(evnt);
+    OpGetRawAPI(evnt);
+};
 function OpPostRawAPI(evnt: Event): void {
-    DebugLog('OpPostRawAPI');
     const postURL = GetElementValue('v-raw-api-post');
     const postContentsJSON = GetElementValue('v-raw-api-post-data');
     const xError:boolean = (document.getElementById('v-checkbox-x-error') as HTMLInputElement).checked;
@@ -473,6 +518,11 @@ function OpPostRawAPI(evnt: Event): void {
     catch (err) {
         ErrorLog(`Parsing of input JSON failed: "${postContentsJSON}" => ${err}`);
     };
+};
+function OpDoRandomTest(evnt: Event): void {
+    const testData = GetElementValue('v-raw-random-test');
+    const result = /^[A-Za-z][A-Za-z0-9+\-_\.]*$/.test(testData);
+    LogMessage(`Random test: ${testData} => ${result}`);
 };
 // ============================================================================
 // Use account information to get account token and use that to get domain token
@@ -650,6 +700,9 @@ function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
 function FetchPlacesList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_PLACES, 'places', pAsAdmin ? 'asAdmin=true' : undefined);
 };
+function FetchRequestList(pAsAdmin: boolean): Promise<any[]> {
+    return GetDataFromServer(API_GET_REQUESTS, 'requests', pAsAdmin ? 'asAdmin=true' : undefined);
+};
 // Return a Promise for a request to the server and return the 'data' that is fetched.
 // If there are any errors, the Promise is rejected with a text error.
 // If 'pDataField' is passed, what is returned is 'data[pDataField]' otherwise
@@ -700,7 +753,7 @@ function DisplayAccounts() {
         ['name', 'username', 'v-acct-name'],
         ['email', 'email', 'v-acct-email'],
         ['admin', 'administrator', 'v-acct-admin'],
-        ['whenCreated', 'when_account_created', 'v-acct-created']
+        ['whenCreated', 'when_account_created', 'v-date v-acct-created']
     ];
     BuildTable(columns, gAccountsInfo, 'v-acct-table');
 };
@@ -726,8 +779,8 @@ function DisplayDomains() {
         ['desc', 'description', 'v-dom-desc'],
         ['tags', 'tags', 'v-dom-tags'],
         ['last sender', 'last_sender_key', 'v-dom-sender'],
-        ['last heartbeat', 'time_of_last_heartbeat', 'v-dom-lasthb'],
-        ['created', 'when_domain_entry_created', 'v-dom-created'],
+        ['last heartbeat', 'time_of_last_heartbeat', 'v-date v-dom-lasthb'],
+        ['created', 'when_domain_entry_created', 'v-date v-dom-created'],
     ];
     BuildTable(columns, gDomainsInfo, 'v-domain-table');
 };
@@ -737,22 +790,38 @@ function DisplayTokens() {
         ['id', 'tokenId', 'v-id v-tok-id'],
         ['accountId', 'accountId', 'v-id v-tok-account'],
         ['scope', 'scope', 'v-tok-scope'],
-        ['creation', 'creation_time', 'v-tok-created'],
-        ['expiration', 'expiration_time', 'v-tok-expire']
+        ['creation', 'creation_time', 'v-date v-tok-created'],
+        ['expiration', 'expiration_time', 'v-date v-tok-expire']
     ];
     BuildTable(columns, gTokensInfo, 'v-token-table');
 };
 function DisplayPlaces() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
     const columns = [
-        ['id', 'placeId', 'v-id v-tok-id'],
-        ['name', 'name', 'v-id v-tok-name'],
-        ['address', 'address', 'v-tok-address'],
-        ['description', 'description', 'v-tok-description'],
-        ['domain', 'domain.id', 'v-id v-tok-domain'],
-        ['account', 'accountId', 'v-id v-tok-account']
+        ['id', 'placeId', 'v-id v-place-id'],
+        ['name', 'name', 'v-id v-place-name'],
+        ['address', 'address', 'v-place-address'],
+        ['description', 'description', 'v-place-description'],
+        ['domain', 'domain.id', 'v-id v-place-domain'],
+        ['account', 'accountId', 'v-id v-place-account']
     ];
     BuildTable(columns, gPlacesInfo, 'v-places-table');
+};
+function DisplayRequests() {
+    // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
+    const columns = [
+        ['id', 'id', 'v-id v-req-id'],
+        ['type', 'type', 'v-id v-req-type'],
+        ['requestingAcct', 'requesting_account_id', 'v-id v-req-id'],
+        ['targetAcct', 'target_account_id', 'v-id v-req-id'],
+        ['expiration', 'expiration_time', 'v-date v-req-expire'],
+        ['requesterId', 'handshake.requester_id', 'v-id v-req-id'],
+        ['accept', 'handshake.requester_accepted', 'v-req-accept'],
+        ['targetId', 'handshake.target_id', 'v-id v-req-id'],
+        ['accept', 'handshake.target_accepted', 'v-req-accept']
+    ];
+    BuildTable(columns, gRequestInfo, 'v-places-table');
+
 };
 // Build the table with the passed column info into the one table place
 function BuildTable(pColumnInfo: string[][], pData: any[], pTableClass: string) {

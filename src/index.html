@@ -42,6 +42,9 @@
       .v-id {
         font-size: smaller;
       }
+      .v-date {
+        font-size: smaller;
+      }
       .v-button {
           display: inline;
           margin: 4px;
@@ -134,6 +137,7 @@
           <button type="button" class="v-button clickable" op="OpDomainList">Update Domains</button>
           <button type="button" class="v-button clickable" op="OpTokenList">Update Tokens</button>
           <button type="button" class="v-button clickable" op="OpPlacesList">Update Places</button>
+          <button type="button" class="v-button clickable" op="OpRequestList">Update Requests</button>
           <div>
             <input type="checkbox" id="v-checkbox-asadmin" value="asAdmin"></input>
             AsAdmin 
@@ -162,6 +166,17 @@
             </table>
             <button type="button" class="v-button clickable" op="OpDeleteDomain">Delete Domain</button>
             <div id="v-delete-domain-display"></div>
+          </fieldset>
+          <fieldset class="v-fieldset">
+            <legend>Delete Place</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> PlaceId: </td>
+                <td class='v-td-input'> <input id="v-delete-place-placeId" type="text" size="50" maxlength="120" value="placeId"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpDeletePlace">Delete Place</button>
+            <div id="v-delete-place-display"></div>
           </fieldset>
           <fieldset class="v-fieldset">
             <legend>Delete Token</legend>
@@ -211,6 +226,7 @@
               </tr>
             </table>
             <button type="button" class="v-button clickable" op="OpGetRawAPI">Do Request</button>
+            <button type="button" class="v-button clickable" op="OpGetRawAPIMulti">Do Multiple</button>
           </fieldset>
           <fieldset class="v-fieldset">
             <legend>Raw API POST</legend>
@@ -220,11 +236,21 @@
                 <td class='v-td-input'> <input id="v-raw-api-post" type="text" size="50" maxlength="120" value="/api/v1/..."/> </td>
               </tr>
               <tr>
-                <td class='v-td-label'> API: </td>
-                <td class='v-td-input'> <input id="v-raw-api-post-data" type="text" size="50" maxlength="120" value="{ JSON }"/> </td>
+                <td class='v-td-label'> DATA: </td>
+                <td class='v-td-input'> <input id="v-raw-api-post-data" type="text" size="50" maxlength="500" value="{ JSON }"/> </td>
               </tr>
             </table>
             <button type="button" class="v-button clickable" op="OpPostRawAPI">Do Request</button>
+          </fieldset>
+          <fieldset class="v-fieldset">
+            <legend>Random Test</legend>
+            <table class="v-table">
+              <tr>
+                <td class='v-td-label'> DATA: </td>
+                <td class='v-td-input'> <input id="v-raw-random-test" type="text" size="50" maxlength="120" value="stuff"/> </td>
+              </tr>
+            </table>
+            <button type="button" class="v-button clickable" op="OpDoRandomTest">Do Random Test</button>
           </fieldset>
           <div id="v-raw-display"></div>
         </div>
