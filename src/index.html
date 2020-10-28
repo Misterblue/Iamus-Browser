@@ -78,6 +78,7 @@
         <li class="nav-item"><a href="#tabTables" class="nav-link" data-toggle="tab">Tables</a></li>
         <li class="nav-item"><a href="#tabDelete" class="nav-link" data-toggle="tab">Delete</a></li>
         <li class="nav-item"><a href="#tabRaw" class="nav-link" data-toggle="tab">Raw</a></li>
+        <li class="nav-item"><a href="#tabStats" class="nav-link" data-toggle="tab">Stats</a></li>
       </ul>
       <div class="tab-content">
         <div class="tab-pane fade show active" id="tabLogin">
@@ -254,6 +255,9 @@
           </fieldset>
           <div id="v-raw-display"></div>
         </div>
+        <div class="tab-pane fade" id="tabStats">
+          <div id="v-stat-table-os-place"></div>
+        </div>
       </div>
     </div>
     <div id="DEBUGG"></div>
@@ -266,7 +270,9 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
       integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
       crossorigin="anonymous"></script>
+    <script src="https://cdnjs.com/libraries/Chart.js"></script>
     <script src="./IamusTest.js"></script>
+    <script src="./IamusCharts.js"></script>
   </body>
   <!-- vim: set ts=2 sw=2 ai et -->
 </html>

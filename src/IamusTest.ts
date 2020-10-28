@@ -422,7 +422,6 @@ function OpDeleteToken(evnt: Event): void {
     // '/api/v1/user/friends/:username'
     // '/api/v1/user/roles/:role'
 function OpRawUpdated(evnt: Event): void {
-    DebugLog('OpRawUpdated');
     const collection = GetElementValue('v-raw-collection');
     const field = GetElementValue('v-raw-field');
     const value = GetElementValue('v-raw-value');
@@ -772,7 +771,7 @@ function DisplayDomains() {
         ['name', 'name', 'v-dom-place'],
         ['sponsor', 'sponsor_account_id', 'v-id v-dom-sponsor'],
         ['version', 'version', 'v-dom-version'],
-        ['netaddr', 'network_addr', 'v-dom-netaddr'],
+        ['netaddr', 'network_address', 'v-dom-netaddr'],
         ['users', 'num_users', 'v-dom-users'],
         ['anon', 'anon_users', 'v-dom-anon'],
         ['cap', 'capacity', 'v-dom-capacity'],
@@ -787,7 +786,7 @@ function DisplayDomains() {
 function DisplayTokens() {
     // Column defintions are [columnHeader, fieldInAccount, classForDataEntry]
     const columns = [
-        ['id', 'tokenId', 'v-id v-tok-id'],
+        ['token', 'token', 'v-id v-tok-id'],
         ['accountId', 'accountId', 'v-id v-tok-account'],
         ['scope', 'scope', 'v-tok-scope'],
         ['creation', 'creation_time', 'v-date v-tok-created'],
@@ -802,8 +801,7 @@ function DisplayPlaces() {
         ['name', 'name', 'v-id v-place-name'],
         ['address', 'address', 'v-place-address'],
         ['description', 'description', 'v-place-description'],
-        ['domain', 'domain.id', 'v-id v-place-domain'],
-        ['account', 'accountId', 'v-id v-place-account']
+        ['domain', 'domain.id', 'v-id v-place-domain']
     ];
     BuildTable(columns, gPlacesInfo, 'v-places-table');
 };
