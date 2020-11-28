@@ -60,11 +60,18 @@ document.addEventListener('DOMContentLoaded', ev => {
 
 function UpdateCharts(): void {
   if (gLoginTokenInfo && gLoginTokenInfo.token) {
-    UpdateOSStats();
+    const tabElem = document.getElementById('tabStats');
+    if (tabElem) {
+      const style = getComputedStyle(tabElem);
+      if (style.display !== 'none' && style.visibility === 'visible') {
+        UpdateOSStats();
+      };
+    };
   };
 };
 
 function UpdateOSStats() {
+  InitOSCharts();
   GetDataFromServer('/api/v1/stats/category/os')
   .then( stats => {
     if (stats.os) {
@@ -77,14 +84,58 @@ function UpdateOSStats() {
         makeRow([ makeData('uptime'), makeData(osStats.uptime) ])
       ], 'v-os-table');
 
-      const tablePlace = document.getElementById('v-stat-table-os-place');
+      const tablePlace = document.getElementById('v-stat-os-table-place');
       tablePlace.innerHTML = '';
       tablePlace.appendChild(statTable);
+
+      if (cpuBusyChart) {
+        const yy = cpuBusyChart.data;
+        const xx = osStats.cpuBusy.history['5min'].values;
+        cpuBusyChart.data.datasets[0].data = osStats.cpuBusy.history['5min'].values;
+        cpuBusyChart.update();
+      };
     };
   })
   .catch( err => {
     DebugLog('UpdateOSStats: exception: ' + err);
   });
+};
+// Make sure the canvases exist for the OS stats
+let cpuBusyChart: Chart;
+let memUsageChart: Chart;
+function InitOSCharts() {
+  // Create canvas's if they are not in the document
+  const testElem = document.getElementById('v-os-canvas-cpuBusy');
+  DebugLog(`InitOSCharts: test element type=${typeof(testElem)}`);
+  if (typeof(testElem) === 'undefined') {
+    DebugLog(`InitOSCharts: canvas being initialized`);
+    const cpuBusyCanvas = makeElement('canvas');
+    cpuBusyCanvas.setAttribute('id', 'v-os-canvas-cpuBusy');
+    cpuBusyCanvas.setAttribute('height', '450');
+    cpuBusyCanvas.setAttribute('width', '600');
+    const memUsageCanvas = makeElement('canvas');
+    memUsageCanvas.setAttribute('id', 'v-os-canvas-memUsage');
+    memUsageCanvas.setAttribute('height', '450');
+    memUsageCanvas.setAttribute('width', '600');
+
+    const canvasPlace = document.getElementById('v-stat-os-canvas-place');
+    canvasPlace.appendChild( makeDiv( [ cpuBusyCanvas, memUsageCanvas ] ) );
+    DebugLog(`InitOSCharts: added canvas to the canvas-place`);
+
+    // Create the charts for the canvas's
+    const cpuBusyContext = (document.getElementById('v-os-canvas-cpuBusy') as HTMLCanvasElement).getContext('2d');
+    cpuBusyChart = new Chart(cpuBusyContext, {
+      'type': 'line',
+      'options': {
+      }
+    });
+    const memUsageContext = (document.getElementById('v-os-canvas-cpuBusy') as HTMLCanvasElement).getContext('2d');
+    memUsageChart = new Chart(memUsageContext, {
+      'type': 'line',
+      'options': {
+      }
+    });
+  };
 };
 
 // Make a displayable HTML element for the CPU information

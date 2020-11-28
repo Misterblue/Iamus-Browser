@@ -2,7 +2,6 @@
     "name": "iamus-browser",
     "version": "1.0.0",
     "description": "Browser interface for testing Iamus server",
-    "main": "index.js",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Misterblue/Iamus-Browser.git"
@@ -18,17 +17,20 @@
         "url": "https://github.com/Misterblue/Iamus-Browser/issues"
     },
     "homepage": "https://github.com/Misterblue/Iamus-Browser#readme",
+    "main": "index.js",
     "scripts": {
         "run": "node dist/index.js",
-        "build": "npm-run-all -s \"clean:dist\" \"copy-html\" \"build:iamus-browser\"",
+        "build": "npm-run-all -s \"clean:dist\" \"copy-static\" \"build:iamus-browser\"",
         "prebuild:iamus-browser": "tslint -c tslint.json -p tsconfig.json --fix",
         "build:iamus-browser": "tsc",
-        "copy-html": "cp src/index.html dist/",
+        "copy-static": "cp src/index.html dist/",
         "clean:dist": "rm -rf dist/*",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "dependencies": {},
+    "dependencies": {
+    },
     "devDependencies": {
+        "@types/chart.js": "^2.9.27",
         "npm-run-all": "^4.1.5",
         "tslint": "^6.1.3",
         "typescript": "^3.9.7"
