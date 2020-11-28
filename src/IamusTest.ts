@@ -129,6 +129,8 @@ interface PlaceInfo {
     name: string,
     address: string,
     description: string,
+    maturity: string,
+    tags: string[],
     domain: DomainInfoSmall,
     accountId: string
 };
@@ -801,6 +803,8 @@ function DisplayPlaces() {
         ['name', 'name', 'v-id v-place-name'],
         ['address', 'address', 'v-place-address'],
         ['description', 'description', 'v-place-description'],
+        ['maturity', 'maturity', 'v-place-maturity'],
+        ['tags', 'tags', 'v-place-tags'],
         ['domain', 'domain.id', 'v-id v-place-domain']
     ];
     BuildTable(columns, gPlacesInfo, 'v-places-table');
