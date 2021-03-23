@@ -50,6 +50,16 @@ interface StatsOs {
   cpuBusy: OneStatInfo,
   memUsage: OneStatInfo
 };
+interface StatsServer {
+  apiRequests: OneStatInfo,
+  apiErrors: OneStatInfo,
+};
+interface StatsMv {
+  totalOnline: OneStatInfo,
+  domainTotalUsers: OneStatInfo,
+  domainAnonUsers: OneStatInfo,
+  activeDomains: OneStatInfo,
+};
 
 document.addEventListener('DOMContentLoaded', ev => {
   UpdateCharts();
@@ -62,9 +72,12 @@ function UpdateCharts(): void {
   if (gLoginTokenInfo && gLoginTokenInfo.token) {
     const tabElem = document.getElementById('tabStats');
     if (tabElem) {
+      // Only update the display if the tab is visible
       const style = getComputedStyle(tabElem);
       if (style.display !== 'none' && style.visibility === 'visible') {
         UpdateOSStats();
+        UpdateServerStats();
+        UpdateMetaverseStats();
       };
     };
   };
@@ -88,6 +101,9 @@ function UpdateOSStats() {
       tablePlace.innerHTML = '';
       tablePlace.appendChild(statTable);
 
+      const histoTable = SimpleOneStatInfoDisplay(osStats.cpuBusy);
+      tablePlace.appendChild(histoTable);
+
       if (cpuBusyChart) {
         const yy = cpuBusyChart.data;
         const xx = osStats.cpuBusy.history['5min'].values;
@@ -100,6 +116,43 @@ function UpdateOSStats() {
     DebugLog('UpdateOSStats: exception: ' + err);
   });
 };
+
+function UpdateServerStats() {
+  InitServerCharts();
+  GetDataFromServer('/api/v1/stats/category/server')
+  .then( stats => {
+    if (stats.server) {
+      const svrStats: StatsServer = stats.server;
+      const tablePlace = document.getElementById('v-stat-srv-table-place');
+      tablePlace.innerHTML = '';
+      Object.keys(svrStats).forEach( key => {
+        tablePlace.appendChild(SimpleOneStatInfoDisplay((svrStats as any)[key]));
+      });
+    };
+  })
+  .catch( err => {
+    DebugLog('UpdateServerStats: exception: ' + err);
+  });
+};
+
+function UpdateMetaverseStats() {
+  InitMvCharts();
+  GetDataFromServer('/api/v1/stats/category/metaverse')
+  .then( stats => {
+    if (stats.metaverse) {
+      const mvStats: StatsMv = stats.metaverse;
+      const tablePlace = document.getElementById('v-stat-mv-table-place');
+      tablePlace.innerHTML = '';
+      Object.keys(mvStats).forEach( key => {
+        tablePlace.appendChild(SimpleOneStatInfoDisplay((mvStats as any)[key]));
+      });
+    };
+  })
+  .catch( err => {
+    DebugLog('UpdateMetaverseStats: exception: ' + err);
+  });
+};
+
 // Make sure the canvases exist for the OS stats
 let cpuBusyChart: Chart;
 let memUsageChart: Chart;
@@ -136,6 +189,50 @@ function InitOSCharts() {
       }
     });
   };
+};
+
+function InitServerCharts() {
+  return;
+};
+
+function InitMvCharts() {
+  return;
+};
+
+function SimpleOneStatInfoDisplay(pInfo: OneStatInfo, pTableClass?: string): HTMLElement {
+  const nameline = `${pInfo.name}/${pInfo.category} = ${pInfo.value} (${pInfo.unit})`;
+  const lines: HTMLElement[] = [
+    makeDiv(nameline)
+  ];
+  if (pInfo.history) {
+    Object.keys(pInfo.history).map( key => {
+      const histo = pInfo.history[key];
+      lines.push( makeDiv( `....${key}: ${HistoInfo(histo)}`));
+    });
+  };
+  const block = makeDiv(lines);
+  return block;
+};
+
+function HistoInfo(pHisto: Histogram): string {
+  const bucketsBeginDate = new Date(pHisto.timeBase);
+  const bucketsEndDate = new Date(pHisto.timeBase + pHisto.totalMilliseconds);
+  const bucketsBeginString = MakeDateString(bucketsBeginDate);
+  const bucketsEndString = MakeDateString(bucketsEndDate);
+  return 'b=' + bucketsBeginString + ', e=' + bucketsEndString;
+};
+
+function MakeDateString(pDate: Date): string {
+  return pDate.toISOString();
+  /*
+  let dateString: string = pDate.getFullYear() + '-';
+  dateString += (pDate.getMonth() + 1) + '-';
+  dateString += pDate.getDate() + ' ';
+  dateString += pDate.getHours() + ':';
+  dateString += pDate.getMinutes() + ':';
+  dateString += pDate.getSeconds();
+  return dateString;
+  */
 };
 
 // Make a displayable HTML element for the CPU information

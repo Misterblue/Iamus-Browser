@@ -656,7 +656,7 @@ function CreateUserAccount(pUsername: string, pPassword: string, pEmail: string)
         request.send(requestData);
     });
 };
-function DoDeleteOp(pAccountTokenInfo: AuthTokenInfo, pURL: string) {
+async function DoDeleteOp(pAccountTokenInfo: AuthTokenInfo, pURL: string): Promise<void> {
     return new Promise( (resolve , reject) => {
         const request = new XMLHttpRequest();
         request.onreadystatechange = function() {
@@ -685,23 +685,23 @@ function DoDeleteOp(pAccountTokenInfo: AuthTokenInfo, pURL: string) {
         request.send();
     });
 };
-function FetchAccountList(pAsAdmin: boolean): Promise<any[]> {
+async function FetchAccountList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_ACCOUNTS, 'accounts', pAsAdmin ? 'asAdmin=true' : undefined);
 };
-function FetchUserList(pAsAdmin: boolean): Promise<any[]> {
+async function FetchUserList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_USERS, 'users', pAsAdmin ? 'asAdmin=true' : undefined);
 };
-function FetchDomainList(pAsAdmin: boolean): Promise<any[]> {
+async function FetchDomainList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_DOMAINS, 'domains', pAsAdmin ? 'asAdmin=true' : undefined);
 };
 // Return a Promise for a request to the server and return the 'data' that is fetched.
-function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
+async function FetchTokenList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_TOKENS, 'tokens', pAsAdmin ? 'asAdmin=true' : undefined);
 };
-function FetchPlacesList(pAsAdmin: boolean): Promise<any[]> {
+async function FetchPlacesList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_PLACES, 'places', pAsAdmin ? 'asAdmin=true' : undefined);
 };
-function FetchRequestList(pAsAdmin: boolean): Promise<any[]> {
+async function FetchRequestList(pAsAdmin: boolean): Promise<any[]> {
     return GetDataFromServer(API_GET_REQUESTS, 'requests', pAsAdmin ? 'asAdmin=true' : undefined);
 };
 // Return a Promise for a request to the server and return the 'data' that is fetched.
@@ -709,7 +709,7 @@ function FetchRequestList(pAsAdmin: boolean): Promise<any[]> {
 // If 'pDataField' is passed, what is returned is 'data[pDataField]' otherwise
 //    the whole 'data' structure is returned.
 // Note: this also sends the gLoginTokenInfo info in the Authorization header.
-function GetDataFromServer(pBaseUrl: string, pDataField?: string, pQuery?: string): Promise<any[] | any> {
+async function GetDataFromServer(pBaseUrl: string, pDataField?: string, pQuery?: string): Promise<any[] | any> {
     return new Promise( (resolve, reject) => {
         const request = new XMLHttpRequest();
         request.onreadystatechange = function() {
@@ -805,6 +805,7 @@ function DisplayPlaces() {
         ['description', 'description', 'v-place-description'],
         ['maturity', 'maturity', 'v-place-maturity'],
         ['tags', 'tags', 'v-place-tags'],
+        ['vis', 'visibility', 'v-place-visibility'],
         ['domain', 'domain.id', 'v-id v-place-domain']
     ];
     BuildTable(columns, gPlacesInfo, 'v-places-table');
@@ -886,6 +887,9 @@ function makeData(contents: any, aClass?: string): HTMLElement {
 };
 function makeDiv(contents: any, aClass?: string): HTMLElement {
     return makeElement('div', contents, aClass);
+};
+function makeSpan(contents: any, aClass?: string): HTMLElement {
+    return makeElement('span', contents, aClass);
 };
 function makeImage(src: string, aClass?: string): HTMLElement {
     const img = makeElement('img', undefined, aClass);
